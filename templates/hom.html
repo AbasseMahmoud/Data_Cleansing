@@ -1,0 +1,114 @@
+{% extends "base.html"%}
+{% block content%}
+<title>Traitement | données</title>
+ <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+ <link rel="icon" href="{{url_for('static', filename='assets/logo.jpg')}}">
+    <div class="container py-5">
+        <h1>Analyse de données de type (CSV)</h1>
+        <form method="post" class="form-control" enctype="multipart/form-data" action="/traitement">
+            <div class="form-group">
+                <input type="file" name="file" class="form-control" accept=".csv" required>
+            </div>
+            <button type="submit" class="btn btn-success">Analyser le fichier</button>
+        </form>
+        <p class="upload">Veuillez uploader un fichier CSV contenant les données pour un traitement</p>
+    </div>
+{%endblock content%}
+
+
+
+
+
+
+
+
+
+{% extends "base.html"%}
+
+{% block content%}
+<title>Résultats | Traitement</title>
+<link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+<div class="container">
+    <h1>Résultats de l'analyse</h1>
+    
+    <div class="report-section">
+        <h2>Statistiques générales</h2>
+        <p>Données originales : {{ original_shape[0] }} lignes × {{ original_shape[1] }} colonnes</p>
+        <p>Données finales : {{ final_shape[0] }} lignes × {{ final_shape[1] }} colonnes</p>
+    </div>
+    
+    <div class="report-section">
+        <h2>Valeurs manquantes</h2>
+        <p>{{ missing_report['message'] }}</p>
+        <h3>Avant traitement :</h3>
+        <ul>
+            {% for col, count in missing_report['before'].items() %}
+                {% if count > 0 %}
+                    <li>{{ col }}: {{ count }} valeurs manquantes</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+        <h3>Après traitement :</h3>
+        <ul>
+            {% for col, count in missing_report['after'].items() %}
+                <li>{{ col }}: {{ count }} valeurs manquantes restantes</li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <div class="report-section">
+        <h2>Valeurs aberrantes</h2>
+        {% if outliers_report.message %}
+            <p>{{ outliers_report.message }}</p>
+        {% else %}
+            {% for col, info in outliers_report.items() %}
+                <h3>{{ col }}</h3>
+                <ul>
+                    <li>Valeurs aberrantes détectées: {{ info['count'] }}</li>
+                    <li>Seuil inférieur: {{ info['valeurs_inférieures'] }}</li>
+                    <li>Seuil supérieur: {{ info['valeurs_supérieures'] }}</li>
+                    <li>Méthode: {{ info['method'] }}</li>
+                </ul>
+            {% endfor %}
+        {% endif %}
+    </div>
+    
+    <div class="report-section">
+        <h2>Doublons</h2>
+        <p>{{ duplicates_report.message }}</p>
+        {% if 'complete_duplicates' in duplicates_report and duplicates_report.complete_duplicates > 0 %}
+            <p>Doublons complets détectés: {{ duplicates_report.complete_duplicates }}</p>
+        {% endif %}
+        {% if 'pid_duplicates' in duplicates_report and duplicates_report.pid_duplicates > 0 %}
+            <p>PID dupliqués détectés: {{ duplicates_report.pid_duplicates }}</p>
+        {% endif %}
+    </div>
+    
+    <div class="container">
+        <h2>Aperçu des données traitées (10 premières lignes)</h2>
+        <table class="table table-bordrerd table-striped table-hover ">
+            <thead>
+                <tr>
+                    {% for key in sample_data[0].keys() %}
+                        <th>{{ key }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in sample_data %}
+                    <tr>
+                        {% for value in row.values() %}
+                            <td>{{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="action-buttons">
+        <a href="/download" class="btn btn-success">Télécharger les données traitées (CSV) <i class="fa-solid fa-arrow-down"></i></a>
+        <a href="/upload" class="btn btn-primary">Nouvelle analyse <i class="fa-regular fa-square-plus"></i></a>
+    </div>
+</div>
+{%endblock content%}

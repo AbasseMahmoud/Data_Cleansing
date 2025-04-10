@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block content %}
+<title>Résultats | Traitement</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+
+<div class="results-container">
+    <div class="page-header">
+        <h1><i class="fas fa-chart-line"></i> Résultats du Traitement</h1>
+        <p>Analyse complète de vos données après nettoyage et optimisation</p>
+    </div>
+
+    <!-- Statistiques Globales -->
+    <div class="summary-card">
+        <h3 class="section-title"><i class="fas fa-chart-pie"></i> Aperçu Global</h3>
+        <div class="stat-grid">
+            <div class="stat-item">
+                <div class="stat-icon"><i class="fas fa-database"></i></div>
+                <div class="stat-content">
+                    <h4>Données Originales</h4>
+                    <p>{{ original_shape[0] }} lignes × {{ original_shape[1] }} colonnes</p>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-content">
+                    <h4>Données Traitées</h4>
+                    <p>{{ final_shape[0] }} lignes × {{ final_shape[1] }} colonnes</p>
+                </div>
+            </div>
+            {% if original_shape[0] - final_shape[0] > 0 %}
+            <div class="stat-item">
+                <div class="stat-icon"><i class="fas fa-filter"></i></div>
+                <div class="stat-content">
+                    <h4>Lignes Supprimées</h4>
+                    <p>{{ original_shape[0] - final_shape[0] }} lignes nettoyées</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Valeurs Manquantes -->
+    <div class="summary-card missing-values">
+        <h3 class="section-title"><i class="fas fa-question-circle"></i> Traitement des Valeurs Manquantes</h3>
+        
+        {% set missing_before = missing_report['before'].values()|sum %}
+        {% set missing_after = missing_report['after'].values()|sum %}
+        
+        <div class="alert-panel {% if missing_after == 0 %}alert-success{% else %}alert-warning{% endif %}">
+            <i class="fas {% if missing_after == 0 %}fa-check-circle{% else %}fa-exclamation-triangle{% endif %}"></i>
+            <div>
+                <strong>{% if missing_after == 0 %}Toutes les valeurs manquantes traitées{% else %}Valeurs manquantes résiduelles{% endif %}</strong>
+                <p>{{ missing_before }} valeurs manquantes initiales → {{ missing_after }} restantes</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h5><i class="fas fa-search"></i> Détection Initiale</h5>
+                {% if missing_before > 0 %}
+                    <div class="data-preview">
+                        <table class="table table-striped table-bordererd">
+                            <thead>
+                                <tr>
+                                    <th>Colonne</th>
+                                    <th>Valeurs Manquantes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for col, count in missing_report['before'].items() %}
+                                    {% if count > 0 %}
+                                    <tr>
+                                        <td>{{ col }}</td>
+                                        <td><span class="badge-count">{{ count }}</span></td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted"><i class="fas fa-check"></i> Aucune valeur manquante détectée initialement</p>
+                {% endif %}
+            </div>
+            
+            <div class="col-md-6">
+                <h5><i class="fas fa-check-double improvement"></i> Après Correction</h5>
+                {% if missing_after > 0 %}
+                    <div class="data-preview">
+                        <table class="table table-striped table-bordererd">
+                            <thead>
+                                <tr>
+                                    <th>Colonne</th>
+                                    <th>Valeurs Restantes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for col, count in missing_report['after'].items() %}
+                                    <tr>
+                                        <td>{{ col }}</td>
+                                        <td><span class="badge badge-secondary">{{ count }}</span></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-success"><i class="fas fa-check-circle"></i> Toutes les valeurs manquantes ont été corrigées</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Valeurs Aberrantes -->
+    <div class="summary-card">
+        <h3 class="section-title"><i class="fas fa-bolt"></i> Valeurs Aberrantes</h3>
+        
+        {% if outliers_report %}
+            <div class="alert-panel alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <strong>{{ outliers_report|length }} colonne(s) avec valeurs aberrantes</strong>
+                    <p>Les valeurs extrêmes ont été corrigées selon la méthode IQR</p>
+                </div>
+            </div>
+            
+            <div class="outlier-stats">
+                {% for col, info in outliers_report.items() %}
+                    <div class="outlier-card">
+                        <h5>{{ col }}</h5>
+                        <div class="outlier-stats">
+                            <div class="outlier-stat">
+                                <small>Valeurs corrigées</small>
+                                <h4>{{ info['count'] }}</h4>
+                            </div>
+                            <div class="outlier-stat">
+                                <small>Seuil inférieur</small>
+                                <h4>{{ info.get('valeurs_inférieures', 'N/A') }}</h4>
+                            </div>
+                            <div class="outlier-stat">
+                                <small>Seuil supérieur</small>
+                                <h4>{{ info.get('valeurs_supérieures', 'N/A') }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert-panel alert-success">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                    <strong>Aucune valeur aberrante détectée</strong>
+                    <p>Toutes les valeurs sont dans les plages attendues</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Doublons -->
+    <div class="summary-card">
+        <h3 class="section-title"><i class="fas fa-copy"></i> Gestion des Doublons</h3>
+        
+        {% if duplicates_report.get('count', 0) > 0 %}
+            <div class="alert-panel alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                <div>
+                    <strong>{{ duplicates_report['count'] }} doublons détectés</strong>
+                    <p>Tous les doublons complets ont été supprimés</p>
+                </div>
+            </div>
+            
+            {% if duplicates_report.get('complete_duplicates', 0) > 0 %}
+            <div class="stat-item">
+                <div class="stat-icon"><i class="fas fa-clone"></i></div>
+                <div class="stat-content">
+                    <h4>Doublons Complets</h4>
+                    <p>{{ duplicates_report['complete_duplicates'] }} lignes identiques supprimées</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if duplicates_report.get('pid_duplicates', 0) > 0 %}
+            <div class="stat-item">
+                <div class="stat-icon"><i class="fas fa-id-card"></i></div>
+                <div class="stat-content">
+                    <h4>PID Dupliqués</h4>
+                    <p>{{ duplicates_report['pid_duplicates'] }} identifiants en double</p>
+                </div>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="alert-panel alert-success">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                    <strong>Aucun doublon détecté</strong>
+                    <p>Toutes les lignes sont uniques</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Aperçu des Données -->
+    <div class="summary-card">
+        <h3 class="section-title"><i class="fas fa-table"></i> Aperçu des Données Traitées</h3>
+        <p class="text-muted">Affichage des 10 premières lignes après traitement</p>
+        
+        <div class="data-preview">
+            <table class="table">
+                <thead>
+                    <tr>
+                        {% for key in sample_data[0].keys() %}
+                            <th>{{ key }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in sample_data %}
+                        <tr>
+                            {% for value in row.values() %}
+                                <td>{% if value is none %}<span class="text-muted">NULL</span>{% else %}{{ value }}{% endif %}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="action-buttons">
+        <a href="/download" class="btn btn-download">
+            <i class="fas fa-file-export"></i> Télécharger le CSV
+        </a>
+        <a href="/televerser" class="btn btn-new">
+            <i class="fas fa-redo"></i> Nouvelle Analyse
+        </a>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}">
+   
+</script>
+{% endblock content %}

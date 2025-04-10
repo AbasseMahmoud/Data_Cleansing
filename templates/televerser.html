@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<title>Traitement | DataCleaner</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/upload.css') }}">
+<link rel="icon" href="{{url_for('static', filename='assets/logo.jpg') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+</style>
+
+<div class="upload-container">
+    <div class="upload-header">
+        <h1><i class="fas fa-cloud-upload-alt"></i> Analyse de Données</h1>
+        <p>Chargez votre fichier pour commencer le traitement automatique</p>
+    </div>
+    
+    <form method="post" class="form" enctype="multipart/form-data" action="/traitement" id="file-form">
+        <div class="form-group">
+            <!-- Zone de glisser-déposer améliorée -->
+            <div id="drop-area" class="drop-area">
+                <div class="upload-icon">
+                    <i class="fas fa-file-csv"></i>
+                </div>
+                <h3>Glissez-déposez votre fichier ici</h3>
+                <p>ou cliquez pour parcourir vos fichiers</p>
+                <input type="file" name="file" class="file-input" accept=".csv, .json" required id="file-input">
+                <div id="file-info" class="file-info"></div>
+                
+                <!-- Indicateurs de statut -->
+                <div id="processing-icon" class="processing-icon">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>Traitement en cours...</p>
+                </div>
+                
+                <div id="success-icon" class="success-icon">
+                    <i class="fas fa-check-circle fa-2x"></i>
+                    <p>Fichier prêt pour analyse !</p>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-upload" id="submit-btn">
+                <i class="fas fa-rocket"></i> Lancer l'analyse
+            </button>
+        </div>
+    </form>
+    
+    <div class="supported-formats">
+        <p><i class="fas fa-info-circle"></i> Formats supportés : CSV ou JSON(résultat en CSV)</p>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/upload.js') }}">
+   
+</script>
+{% endblock content %}

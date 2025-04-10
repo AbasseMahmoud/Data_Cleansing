@@ -1,0 +1,132 @@
+from flask import Flask, request, render_template, send_file
+import pandas as pd
+import numpy as np
+
+app = Flask(__name__)
+
+def clean_dataframe(df):
+    """Nettoyage générique pour n'importe quel dataframe"""
+    cleaned_df = df.copy()
+    for col in cleaned_df.columns:
+        try:
+            cleaned_df[col] = pd.to_numeric(cleaned_df[col], errors='raise')
+            continue  # Si la conversion réussit, passer à la colonne suivante
+        except:
+            pass
+        
+        if cleaned_df[col].dtype == object:
+            cleaned_df[col] = cleaned_df[col].replace(
+                ['n/a', 'NA', 'na', 'NaN', 'NULL', 'null', '--', '?', ''], np.nan)    #  '0','9999','-1'
+            unique_vals = cleaned_df[col].dropna().unique()
+            if all(str(x).upper() in ['Y', 'N', 'OUI', 'NON', 'YES', 'NO'] for x in unique_vals if pd.notnull(x)):
+                cleaned_df[col] = cleaned_df[col].apply(
+                    lambda x: str(x).upper() if pd.notnull(x) else np.nan)
+    return cleaned_df
+
+def handle_missing_values(df):
+    """Détection et traitement des valeurs manquantes"""
+    missing_before = df.isnull().sum().to_dict()
+    for col in df.columns:
+        if pd.api.types.is_numeric_dtype(df[col]):
+            median_val = df[col].median()
+            df[col] = df[col].fillna(median_val)
+        else:
+            mode_val = df[col].mode()[0] if len(df[col].mode()) > 0 else ''
+            df[col] = df[col].fillna(mode_val)
+    missing_after = df.isnull().sum().to_dict()
+    return df, {'before': missing_before, 'after': missing_after}
+
+def handle_outliers(df):
+    """Traitement des valeurs aberrantes"""
+    report = {}
+    numeric_cols = df.select_dtypes(include=[np.number]).columns
+    for col in numeric_cols:
+        q1 = df[col].quantile(0.25)
+        q3 = df[col].quantile(0.75)
+        iqr = q3 - q1
+        if iqr > 0:
+            valeurs_inférieures = q1 - 1.5 * iqr
+            valeurs_supérieures = q3 + 1.5 * iqr
+            outliers = df[(df[col] < valeurs_inférieures) | (df[col] > valeurs_supérieures)]
+            outlier_count = len(outliers)
+            if outlier_count > 0:
+                df[col] = np.where(df[col] < valeurs_inférieures, valeurs_inférieures, 
+                                   np.where(df[col] > valeurs_supérieures, valeurs_supérieures, df[col]))
+                report[col] = {'count': outlier_count, 'valeurs_inférieures': valeurs_inférieures, 'valeurs_supérieures': valeurs_supérieures}
+               
+    return df, report
+
+def handle_duplicates(df):
+    """Gestion des doublons"""
+    dup_count = df[df.duplicated()].shape[0]
+    if dup_count > 0:
+        df = df.drop_duplicates()
+        return df, {'count': dup_count, 'message': f"{dup_count} doublons supprimés"}
+    return df, {'message': "Aucun doublon détecté"}
+
+@app.route('/upload/')
+def upload():
+    return render_template('upload.html')
+
+@app.route('/about/')
+def about():
+    return render_template('about.html')
+
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+@app.route('/traitement', methods=['POST'])
+def traitement():
+    if 'file' not in request.files:
+        return render_template('error.html', message="Aucun fichier sélectionné")
+    
+    file = request.files['file']
+    if file.filename == '':
+        return render_template('error.html', message="Aucun fichier sélectionné")
+    
+    # Vérification du type de fichier (CSV ou JSON)
+    if file.filename.endswith('.csv'):
+        try:
+            df = pd.read_csv(file)
+        except Exception as e:
+            return render_template('error.html', message=f"Erreur de lecture du fichier CSV : {str(e)}")
+    elif file.filename.endswith('.json'):
+        try:
+            df = pd.read_json(file)
+        except Exception as e:
+            return render_template('error.html', message=f"Erreur de lecture du fichier JSON : {str(e)}")
+    else:
+        return render_template('error.html', message="Seuls les fichiers CSV et JSON sont acceptés")
+    
+    original_shape = df.shape
+    df = clean_dataframe(df)
+    df, missing_report = handle_missing_values(df)
+    df, outliers_report = handle_outliers(df)
+    df, duplicates_report = handle_duplicates(df)
+    
+    # Sauvegarde du fichier traité TOUJOURS en CSV
+    output_file = 'static/fichier_traiter_data.csv'
+    df.to_csv(output_file, index=False)
+    
+    final_shape = df.shape
+    sample_data = df.head(12).to_dict('records')
+    column_types = {col: str(df[col].dtype) for col in df.columns}
+    
+    return render_template('results.html',
+                           original_shape=original_shape,
+                           final_shape=final_shape,
+                           missing_report=missing_report,
+                           outliers_report=outliers_report,
+                           duplicates_report=duplicates_report,
+                           sample_data=sample_data,
+                           column_types=column_types)
+
+@app.route('/download')
+def download():
+    # On force toujours le téléchargement en CSV
+    file_path = 'static/fichier_traiter_data.csv'
+    return send_file(file_path, as_attachment=True, mimetype='text/csv', download_name='fichier_traiter_data.csv')
+
+if __name__ == '__main__':
+    app.run(debug=True)

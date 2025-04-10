@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% block content %}
+<title>À propos | DataCleaner</title>
+<link rel="icon" href="{{url_for('static',filename='assets/logo.jpg')}}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    :root {
+        --primary: #4361ee;
+        --secondary: #3f37c9;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --success: #4cc9f0;
+        --border-radius: 12px;
+        --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f5f7ff;
+        color: var(--dark);
+    }
+    
+    .about-header {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 3rem;
+        text-align: center;
+        border-radius: 0 0 var(--border-radius) var(--border-radius);
+    }
+    
+    .about-header h1 {
+        font-weight: 700;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .about-header p {
+        font-size: 1.2rem;
+        max-width: 800px;
+        margin: 0 auto;
+        opacity: 0.9;
+    }
+    
+    .feature-section {
+        padding: 2rem;
+        margin: 2rem auto;
+        max-width: 1200px;
+    }
+    
+    .section-title {
+        color: var(--primary);
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        position: relative;
+        padding-bottom: 0.5rem;
+    }
+    
+    .section-title:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: var(--success);
+    }
+    
+    .feature-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--box-shadow);
+        transition: transform 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        color: var(--primary);
+        margin-bottom: 1rem;
+    }
+    
+    .feature-list {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    
+    .feature-list li {
+        padding: 0.8rem 0;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: flex-start;
+    }
+    
+    .feature-list li:last-child {
+        border-bottom: none;
+    }
+    
+    .feature-list i {
+        color: var(--success);
+        margin-right: 1rem;
+        margin-top: 0.2rem;
+    }
+    
+    .card-container {
+        margin-top: 3rem;
+    }
+    
+    .team-card {
+        border: none;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--box-shadow);
+        transition: all 0.3s ease;
+    }
+    
+    .team-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .team-card img {
+        height: 250px;
+        object-fit: cover;
+    }
+    
+    .team-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    .team-card .card-title {
+        color: var(--primary);
+        font-weight: 600;
+    }
+    
+    .security-badge {
+        background: rgba(76, 201, 240, 0.1);
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        border-left: 4px solid var(--success);
+        margin: 2rem 0;
+    }
+    
+    @media (max-width: 768px) {
+        .about-header {
+            padding: 3rem 1rem;
+        }
+        
+        .about-header h1 {
+            font-size: 2rem;
+        }
+        
+        .feature-card {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<div class="about-header">
+    <div class="container">
+        <h1><i class="fas fa-info-circle"></i> À propos de DataCleaner</h1>
+        <p>Votre solution tout-en-un pour le nettoyage et le prétraitement des données</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="feature-section">
+        <div class="feature-card">
+            <div class="section-title">
+                <h2><i class="fas fa-star"></i> Notre Mission</h2>
+            </div>
+            <p>DataCleaner a été conçu pour simplifier le processus fastidieux de nettoyage des données, permettant aux analystes, chercheurs et professionnels de gagner du temps et de se concentrer sur ce qui compte vraiment : extraire des insights précieux de leurs données.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="section-title">
+                <h2><i class="fas fa-cogs"></i> Fonctionnalités Clés</h2>
+            </div>
+            <ul class="feature-list">
+                <li>
+                    <i class="fas fa-broom"></i>
+                    <div>
+                        <h5>Nettoyage générique des données</h5>
+                        <p>Conversion automatique des colonnes numériques, gestion des valeurs spéciales (NA, NaN, NULL) et standardisation des formats.</p>
+                    </div>
+                </li>
+                <li>
+                    <i class="fas fa-question-circle"></i>
+                    <div>
+                        <h5>Traitement des valeurs manquantes</h5>
+                        <p>Remplacement intelligent par médiane (numérique) ou mode (catégoriel) pour préserver la distribution de vos données.</p>
+                    </div>
+                </li>
+                <li>
+                    <i class="fas fa-bolt"></i>
+                    <div>
+                        <h5>Détection des valeurs aberrantes</h5>
+                        <p>Identification des outliers par la méthode IQR et ajustement par Winsorization pour minimiser leur impact.</p>
+                    </div>
+                </li>
+                <li>
+                    <i class="fas fa-clone"></i>
+                    <div>
+                        <h5>Suppression des doublons</h5>
+                        <p>Détection et élimination des enregistrements dupliqués pour garantir l'unicité de vos données.</p>
+                    </div>
+                </li>
+                <li>
+                    <i class="fas fa-file-csv"></i>
+                    <div>
+                        <h5>Support des formats CSV/JSON</h5>
+                        <p>Importez vos données depuis CSV ou JSON et exportez le résultat au format CSV standardisé.</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="feature-card">
+            <div class="section-title">
+                <h2><i class="fas fa-check-circle"></i> Pourquoi choisir DataCleaner ?</h2>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="text-center p-3">
+                        <i class="fas fa-clock feature-icon"></i>
+                        <h4>Gain de temps</h4>
+                        <p>Automatisez les tâches répétitives de nettoyage et gagnez des heures de travail précieuses.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="text-center p-3">
+                        <i class="fas fa-shield-alt feature-icon"></i>
+                        <h4>Sécurité</h4>
+                        <p>Vos données ne sont jamais stockées et restent confidentielles.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="text-center p-3">
+                        <i class="fas fa-chart-line feature-icon"></i>
+                        <h4>Qualité</h4>
+                        <p>Des algorithmes robustes pour des résultats prêts pour l'analyse.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="security-badge">
+            <div class="section-title">
+                <h2><i class="fas fa-lock"></i> Sécurité et Confidentialité</h2>
+            </div>
+            <p>Nous prenons la sécurité de vos données très au sérieux. Tous les fichiers téléchargés sont :</p>
+            <ul class="feature-list">
+                <li><i class="fas fa-check"></i> Traités uniquement pendant votre session</li>
+                <li><i class="fas fa-check"></i> Supprimés immédiatement après traitement</li>
+                <li><i class="fas fa-check"></i> Jamais partagés avec des tiers</li>
+                <li><i class="fas fa-check"></i> Transférés via une connexion sécurisée (HTTPS)</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="card-container">
+        <div class="section-title">
+            <h2><i class="fas fa-users"></i> Notre Équipe</h2>
+        </div>
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+            <div class="col">
+                <div class="card team-card">
+                    <img src="{{url_for('static',filename='assets/logo.jpg')}}" class="card-img-top" alt="Équipe DataCleaner">
+                    <div class="card-body">
+                        <h5 class="card-title">L'Équipe DataCleaner</h5>
+                        <p class="card-text">Une équipe passionnée par la data science et déterminée à rendre le nettoyage de données accessible à tous.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card team-card">
+                    <div class="card-body d-flex align-items-center justify-content-center" style="height: 100%;">
+                        <div class="text-center">
+                            <i class="fas fa-envelope feature-icon"></i>
+                            <h5 class="card-title mt-3">Contactez-nous</h5>
+                            <p class="card-text">Des questions ? Besoin d'aide ? Notre équipe est là pour vous répondre.</p>
+                            <a href="#" class="btn btn-primary mt-2"><i class="fas fa-paper-plane"></i> Envoyer un message</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Animation pour les cartes
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.feature-card, .team-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = `all 0.5s ease ${index * 0.1}s`;
+            
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100);
+        });
+    });
+</script>
+{% endblock content %}

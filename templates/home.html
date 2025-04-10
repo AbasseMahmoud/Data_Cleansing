@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block content %}
+<title>Accueil | DataCleaner</title>
+<link rel="stylesheet" href="{{url_for('static',filename='css/home/home.css')}}">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+   
+</style>
+
+<section class="hero">
+    <div class="hero-content">
+        <h2>Transformez vos données brutes en informations exploitables</h2>
+        <p>Notre plateforme de nettoyage et d'analyse de données automatise vos workflows pour des résultats précis et fiables</p>
+        <a href="/televerser" class="cta-btn">
+            <i class="fas fa-rocket"></i> Commencer maintenant
+        </a>
+    </div>
+</section>
+
+<section class="services">
+    <h2>Nos Services</h2>
+    <div class="services-grid">
+        <div class="service-card">
+            <div class="service-icon">
+                <i class="fas fa-broom"></i>
+            </div>
+            <h3>Nettoyage de données</h3>
+            <p>Correction automatique des valeurs manquantes, des doublons et des incohérences pour des datasets parfaitement propres.</p>
+            <a href="/televerser" class="service-btn">
+                Essayer <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        
+        <div class="service-card">
+            <div class="service-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3>Analyse avancée</h3>
+            <p>Détection automatique des tendances, des anomalies et des insights clés dans vos données.</p>
+            <button class="service-btn">
+                En savoir plus <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+        
+        <div class="service-card">
+            <div class="service-icon">
+                <i class="fas fa-file-export"></i>
+            </div>
+            <h3>Export optimisé</h3>
+            <p>Génération de rapports et exports dans les formats les plus utilisés pour votre stack technique.</p>
+            <button class="service-btn">
+                En savoir plus <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <h2>Pourquoi choisir notre solution ?</h2>
+    <div class="features-grid">
+        <div class="feature-item">
+            <i class="fas fa-clock feature-icon"></i>
+            <h3>Gain de temps</h3>
+            <p>Automatisez le nettoyage fastidieux et gagnez des heures de travail chaque semaine.</p>
+        </div>
+        
+        <div class="feature-item">
+            <i class="fas fa-shield-alt feature-icon"></i>
+            <h3>Sécurité maximale</h3>
+            <p>Vos données sont traitées localement et jamais stockées sur nos serveurs.</p>
+        </div>
+        
+        <div class="feature-item">
+            <i class="fas fa-sliders-h feature-icon"></i>
+            <h3>Personnalisation</h3>
+            <p>Adaptez les paramètres de nettoyage à vos besoins spécifiques.</p>
+        </div>
+        
+        <div class="feature-item">
+            <i class="fas fa-user-check feature-icon"></i>
+            <h3>Convivialité</h3>
+            <p>Interface intuitive conçue pour les experts comme pour les débutants.</p>
+        </div>
+    </div>
+</section>
+
+<section class="stats">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3 col-6">
+                <h3><i class="fas fa-database"></i> 10,000+</h3>
+                <p>Fichiers traités</p>
+            </div>
+            <div class="col-md-3 col-6">
+                <h3><i class="fas fa-clock"></i> 95%</h3>
+                <p>Temps économisé</p>
+            </div>
+            <div class="col-md-3 col-6">
+                <h3><i class="fas fa-check-circle"></i> 99.9%</h3>
+                <p>Précision</p>
+            </div>
+            <div class="col-md-3 col-6">
+                <h3><i class="fas fa-users"></i> 5,000+</h3>
+                <p>Utilisateurs satisfaits</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/home.js') }}">
+</script>
+{% endblock content %}
