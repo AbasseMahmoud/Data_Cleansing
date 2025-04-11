@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, send_file
 import pandas as pd
 import numpy as np
 import re
+import os
 
 app = Flask(__name__)
 
@@ -230,4 +231,5 @@ def download():
     return send_file(file_path, as_attachment=True, mimetype='text/csv', download_name='fichier_traiter_data.csv')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))  # Render définit automatiquement la variable d'env PORT
+    app.run(host='0.0.0.0', port=port)
