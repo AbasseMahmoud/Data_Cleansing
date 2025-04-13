@@ -1,15 +1,14 @@
-ID,Nom,Âge,Email,Ville,Salaire
-1,Alice,25,alice@example.com,Paris,3000.0
-2,Bob,5,bob@example.com,Lyon,4500.0
-3,Charlie,22,charlie@example.com,Marseille,4800.0
-4,David,33,david@example.com,Bordeaux,3200.0
-5,Eve,45,invalid_email,Toulouse,750.0
-6,Frank,60,frank@example.com,Bordeaux,5000.0
-7,Grace,33,grace@example.com,Lille,6000.0
-8,Hannah,29,hannah@example,Strasbourg,7000.0
-9,Isaac,33,isaac@example.com,Montpellier,4800.0
-10,Jack,33,jack@example.com,Rennes,4800.0
-11,Kate,200,kate@example.com,Nice,5500.0
-12,Leo,38,leo@example.com,Nantes,750.0
-13,Mike,33,mike@example.com,Dijon,4800.0
-14,Nina,33,nina@example.com,Grenoble,6200.0
+Nom,Âge,Email,Ville,Salaire,Expérience (années),Nombre_Enfants,Possède_voiture
+John Doe,29,john.doe@example.com,Paris,3000.0,5,1,OUI
+Jane Smith,34,jane.smith@example.com,Lyon,4500.0,10,2,NON
+Paul Martin,22,paul.martin@example.com,Marseille,2800.0,2,0,OUI
+Alice Dupont,33,alice.dupont@example.com,Bordeaux,3200.0,3,3,OUI
+Marc Leblanc,120,marc.leblanc@example.com,Toulouse,300.0,50,2,NON
+Sophie Durand,31,sophie.durand@example.com,Nice,5000.0,2,4,OUI
+Michel Lefevre,5,michel.lefevre@example.com,Lille,6000.0,15,1,OUI
+Emma Bernard,28,emma.bernard@example.com,Strasbourg,3200.0,8,2,NON
+David Robert,45,david.robert@example.com,Montpellier,7000.0,8,3,OUI
+Julie Lemoine,33,julie.lemoine@example.com,Rennes,4800.0,12,1,NON
+Alice Dupont,40,alice.dupont@example.com,Bordeaux,3200.0,3,3,OUI
+Sarah Moreau,120,sarah.moreau@example.com,Grenoble,3200.0,8,5,NON
+Pierre Garnier,33,pierre.garnier@example.com,Nantes,2500.0,20,2,OUI

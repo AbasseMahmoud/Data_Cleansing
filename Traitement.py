@@ -2,7 +2,6 @@ from flask import Flask, request, render_template, send_file
 import pandas as pd
 import numpy as np
 import re
-import os
 
 app = Flask(__name__)
 
@@ -13,7 +12,7 @@ def is_age_column(col_name):
 
 def is_id_column(col_name):
     """Détecte si une colonne est une colonne d'identifiant"""
-    id_keywords = ['id', 'identifiant', 'matricule', 'numero']
+    id_keywords = ['id', 'identifiant', 'matricule', 'numero', 'code']
     return any(keyword in col_name.lower() for keyword in id_keywords)
 
 def clean_age_values(age_series):
@@ -24,24 +23,18 @@ def clean_age_values(age_series):
             cleaned_ages.append(np.nan)
             continue
             
-        # Convertir en chaîne si ce n'est pas déjà le cas
         str_value = str(value).strip()
-        
-        # Extraire les chiffres et point décimal
         digits = re.sub(r'[^\d.]', '', str_value)
         
-        if digits:  # Si on a trouvé des chiffres
+        if digits:
             try:
-                # Convertir en float d'abord pour gérer les décimaux
                 age = float(digits)
-                # Corriger les valeurs négatives (mise à 0) et convertir en entier
-                cleaned_age = int(max(0, age))  # Conversion en entier avec arrondi vers le bas
+                cleaned_age = int(max(0, min(120, age)))  # Limite à 120 ans
                 cleaned_ages.append(cleaned_age)
             except:
                 cleaned_ages.append(np.nan)
         else:
             cleaned_ages.append(np.nan)
-            
     return pd.Series(cleaned_ages, index=age_series.index)
 
 def clean_dataframe(df):
@@ -51,7 +44,6 @@ def clean_dataframe(df):
         # Traitement spécial pour les colonnes d'âge
         if is_age_column(col):
             cleaned_df[col] = clean_age_values(cleaned_df[col])
-            # Conversion finale en Int64 (supportant les NaN)
             cleaned_df[col] = pd.to_numeric(cleaned_df[col], errors='coerce').astype('Int64')
             continue
             
@@ -75,8 +67,7 @@ def handle_missing_values(df):
     missing_before = df.isnull().sum().to_dict()
     for col in df.columns:
         if is_age_column(col):
-            # Pour les âges, on utilise la médiane arrondie avec un minimum de 0
-            median_val = int(max(0, np.nanmedian(df[col].dropna())))
+            median_val = int(max(0, min(120, np.nanmedian(df[col].dropna()))))
             df[col] = df[col].fillna(median_val).astype('Int64')
         elif pd.api.types.is_numeric_dtype(df[col]):
             median_val = df[col].median()
@@ -88,76 +79,86 @@ def handle_missing_values(df):
     return df, {'before': missing_before, 'after': missing_after}
 
 def handle_outliers(df):
-    """Traitement des valeurs aberrantes avec conversion en entiers pour les âges"""
+    """Traitement des valeurs aberrantes avec méthode IQR"""
     report = {}
     numeric_cols = df.select_dtypes(include=[np.number]).columns
+    
     for col in numeric_cols:
         if is_age_column(col):
-            # Traitement spécial pour l'âge - seulement corriger les valeurs négatives
-            lower_bound = 0  # Minimum 0 pour l'âge
-            upper_bound = df[col].max()  # Pas de maximum imposé
+            # Traitement spécial pour l'âge
+            lower_bound = 0
+            upper_bound = 120
             
-            # Appliquer les corrections et convertir en entier
-            df[col] = df[col].clip(lower=lower_bound).astype('Int64')
+            # Compter les outliers avant correction
+            outliers_count = ((df[col] < lower_bound) | (df[col] > upper_bound)).sum()
             
-            # Générer le rapport
-            outliers_count = (df[col] < lower_bound).sum()  # Seulement compter les valeurs négatives
             if outliers_count > 0:
+                # Corriger les valeurs
+                df[col] = df[col].clip(lower=lower_bound, upper=upper_bound).astype('Int64')
                 report[col] = {
                     'count': int(outliers_count),
-                    'lower_bound': lower_bound,
-                    'upper_bound': "Aucune limite supérieure"
+                    'valeurs_inférieures': lower_bound,
+                    'valeurs_supérieures': upper_bound
                 }
         else:
             # Traitement standard pour les autres colonnes numériques
             q1 = df[col].quantile(0.25)
             q3 = df[col].quantile(0.75)
             iqr = q3 - q1
+            
             if iqr > 0:
                 lower_bound = q1 - 1.5 * iqr
                 upper_bound = q3 + 1.5 * iqr
                 
-                df[col] = df[col].clip(lower=lower_bound, upper=upper_bound)
-                
+                # Compter les outliers avant correction
                 outliers_count = ((df[col] < lower_bound) | (df[col] > upper_bound)).sum()
+                
                 if outliers_count > 0:
+                    # Corriger les valeurs
+                    df[col] = np.where(df[col] < lower_bound, lower_bound, 
+                                     np.where(df[col] > upper_bound, upper_bound, df[col]))
                     report[col] = {
                         'count': int(outliers_count),
-                        'lower_bound': lower_bound,
-                        'upper_bound': upper_bound
+                        'valeurs_inférieures': lower_bound,
+                        'valeurs_supérieures': upper_bound
                     }
     return df, report
 
 def handle_duplicates(df):
-    """
-    Gestion améliorée des doublons basée sur l'identifiant
-    """
-    # Trouver la colonne d'identifiant
+    """Gestion des doublons basée sur l'identifiant"""
     id_columns = [col for col in df.columns if is_id_column(col)]
-    
-    if not id_columns:
-        # Si aucune colonne d'identifiant n'est trouvée, utiliser toutes les colonnes
-        dup_mask = df.duplicated(keep='first')
-        message = "Aucune colonne d'identifiant détectée - vérification sur toutes les colonnes"
-    else:
-        # Utiliser la première colonne d'identifiant trouvée
-        id_col = id_columns[0]
-        dup_mask = df.duplicated(subset=[id_col], keep='first')
-        message = f"Doublons détectés sur la colonne d'identifiant: {id_col}"
-    
-    dup_count = dup_mask.sum()
-    
-    if dup_count > 0:
-        df = df[~dup_mask]
-        return df, {
-            'count': dup_count,
-            'message': f"{dup_count} doublons supprimés - {message}",
-            'columns_used': id_columns[0] if id_columns else "toutes les colonnes"
-        }
-    return df, {
-        'message': f"Aucun doublon détecté - {message}",
-        'columns_used': id_columns[0] if id_columns else "toutes les colonnes"
+    dup_report = {
+        'count': 0,
+        'message': "Aucun doublon détecté",
+        'columns_used': "Aucune colonne d'identifiant trouvée"
     }
+    
+    if id_columns:
+        id_col = id_columns[0]
+        dup_report['columns_used'] = id_col
+        
+        dup_mask = df.duplicated(subset=[id_col], keep='first')
+        dup_count = dup_mask.sum()
+        
+        if dup_count > 0:
+            df = df[~dup_mask]
+            dup_report['count'] = dup_count
+            dup_report['message'] = f"{dup_count} doublons supprimés (basés sur {id_col})"
+    else:
+        dup_mask = df.duplicated(keep='first')
+        dup_count = dup_mask.sum()
+        
+        if dup_count > 0:
+            df = df[~dup_mask]
+            dup_report['count'] = dup_count
+            dup_report['message'] = f"{dup_count} doublons supprimés (toutes colonnes)"
+            dup_report['columns_used'] = "Toutes les colonnes"
+    
+    return df, dup_report
+
+@app.route('/')
+def home():
+    return render_template('home.html')
 
 @app.route('/televerser/')
 def televerser():
@@ -166,10 +167,6 @@ def televerser():
 @app.route('/about/')
 def about():
     return render_template('about.html')
-
-@app.route('/')
-def home():
-    return render_template('home.html')
 
 @app.route('/traitement', methods=['POST'])
 def traitement():
@@ -186,8 +183,6 @@ def traitement():
             df = pd.read_csv(file)
         elif file.filename.endswith('.json'):
             df = pd.read_json(file)
-        # elif file.filename.endswith('.xml'):
-        #     df = pd.read_xml(file, parser='lxml')
         else:
             return render_template('error.html', message="Seuls les fichiers CSV et JSON sont acceptés")
     except Exception as e:
@@ -197,7 +192,7 @@ def traitement():
     
     # Traitement des données
     df = clean_dataframe(df)
-    df, duplicates_report = handle_duplicates(df)  # Modification ici
+    df, duplicates_report = handle_duplicates(df)
     df, missing_report = handle_missing_values(df)
     df, outliers_report = handle_outliers(df)
     
@@ -205,8 +200,7 @@ def traitement():
     age_columns = [col for col in df.columns if is_age_column(col)]
     for col in age_columns:
         if pd.api.types.is_numeric_dtype(df[col]):
-            # Ne corriger que les valeurs négatives et convertir en entier
-            df[col] = df[col].clip(lower=0).astype('Int64')
+            df[col] = df[col].clip(lower=0, upper=120).astype('Int64')
     
     # Sauvegarde du fichier traité
     output_file = 'static/fichier_traiter_data.csv'
@@ -231,5 +225,4 @@ def download():
     return send_file(file_path, as_attachment=True, mimetype='text/csv', download_name='fichier_traiter_data.csv')
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # Render définit automatiquement la variable d'env PORT
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)
